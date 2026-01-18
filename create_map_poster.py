@@ -215,7 +215,7 @@ def get_coordinates(city, country):
 
 def create_poster(city, country, point, dist, output_file):
     print(f"\nGenerating map for {city}, {country}...")
-    
+
     # Progress bar for data fetching
     with tqdm(total=3, desc="Fetching map data", unit="step", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
         # 1. Fetch Street Network
@@ -223,7 +223,7 @@ def create_poster(city, country, point, dist, output_file):
         G = ox.graph_from_point(point, dist=dist, dist_type='bbox', network_type='all')
         pbar.update(1)
         time.sleep(0.5)  # Rate limit between requests
-        
+
         # 2. Fetch Water Features
         pbar.set_description("Downloading water features")
         try:
@@ -232,7 +232,7 @@ def create_poster(city, country, point, dist, output_file):
             water = None
         pbar.update(1)
         time.sleep(0.3)
-        
+
         # 3. Fetch Parks
         pbar.set_description("Downloading parks/green spaces")
         try:
@@ -240,14 +240,34 @@ def create_poster(city, country, point, dist, output_file):
         except:
             parks = None
         pbar.update(1)
-    
+
     print("✓ All data downloaded successfully!")
-    
+
+    # Project to local CRS to avoid distortion
+    print("Projecting to local coordinate system...")
+    G = ox.project_graph(G)
+    if water is not None and not water.empty:
+        water = water.to_crs(G.graph['crs'])
+    if parks is not None and not parks.empty:
+        parks = parks.to_crs(G.graph['crs'])
+
+    # Calculate proper figure dimensions from projected bounds
+    import geopandas as gpd
+    nodes, edges = ox.graph_to_gdfs(G)
+    bounds = edges.total_bounds  # minx, miny, maxx, maxy
+    width = bounds[2] - bounds[0]
+    height = bounds[3] - bounds[1]
+    aspect_ratio = height / width
+
+    # Set figure width to 12, height to maintain aspect ratio
+    fig_width = 12
+    fig_height = fig_width * aspect_ratio
+
     # 2. Setup Plot
     print("Rendering map...")
-    fig, ax = plt.subplots(figsize=(12, 16), facecolor=THEME['bg'])
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=THEME['bg'])
     ax.set_facecolor(THEME['bg'])
-    ax.set_position([0, 0, 1, 1])
+    ax.set_aspect('equal')  # Preserve aspect ratio to avoid distortion
     
     # 3. Plot Layers
     # Layer 1: Polygons
@@ -260,7 +280,10 @@ def create_poster(city, country, point, dist, output_file):
     print("Applying road hierarchy colors...")
     edge_colors = get_edge_colors_by_type(G)
     edge_widths = get_edge_widths_by_type(G)
-    
+
+    # Turn off axis to prevent matplotlib from rescaling
+    ax.axis('off')
+
     ox.plot_graph(
         G, ax=ax, bgcolor=THEME['bg'],
         node_size=0,
@@ -268,6 +291,9 @@ def create_poster(city, country, point, dist, output_file):
         edge_linewidth=edge_widths,
         show=False, close=False
     )
+
+    # Re-enforce equal aspect after plotting
+    ax.set_aspect('equal', adjustable='datalim')
     
     # Layer 3: Gradients (Top and Bottom)
     create_gradient_fade(ax, THEME['gradient_color'], location='bottom', zorder=10)
