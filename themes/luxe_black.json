@@ -1,0 +1,15 @@
+{
+  "name": "Luxe Black",
+  "description": "Sophisticated pure black with elegant gold roads - premium luxury aesthetic",
+  "bg": "#000000",
+  "text": "#D4AF37",
+  "gradient_color": "#000000",
+  "water": "#0A0A0A",
+  "parks": "#111111",
+  "road_motorway": "#FFD700",
+  "road_primary": "#D4AF37",
+  "road_secondary": "#C9A227",
+  "road_tertiary": "#B8941F",
+  "road_residential": "#A8862A",
+  "road_default": "#B8941F"
+}

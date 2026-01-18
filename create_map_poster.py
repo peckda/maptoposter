@@ -317,20 +317,20 @@ def create_poster(city, country, point, dist, output_file):
     # --- BOTTOM TEXT ---
     ax.text(0.5, 0.14, spaced_city, transform=ax.transAxes,
             color=THEME['text'], ha='center', fontproperties=font_main, zorder=11)
-    
-    ax.text(0.5, 0.10, country.upper(), transform=ax.transAxes,
+
+    ax.plot([0.4, 0.6], [0.13, 0.13], transform=ax.transAxes,
+            color=THEME['text'], linewidth=1, zorder=11)
+
+    ax.text(0.5, 0.08, country.upper(), transform=ax.transAxes,
             color=THEME['text'], ha='center', fontproperties=font_sub, zorder=11)
-    
+
     lat, lon = point
     coords = f"{lat:.4f}° N / {lon:.4f}° E" if lat >= 0 else f"{abs(lat):.4f}° S / {lon:.4f}° E"
     if lon < 0:
         coords = coords.replace("E", "W")
-    
-    ax.text(0.5, 0.07, coords, transform=ax.transAxes,
+
+    ax.text(0.5, 0.04, coords, transform=ax.transAxes,
             color=THEME['text'], alpha=0.7, ha='center', fontproperties=font_coords, zorder=11)
-    
-    ax.plot([0.4, 0.6], [0.125, 0.125], transform=ax.transAxes, 
-            color=THEME['text'], linewidth=1, zorder=11)
 
     # --- ATTRIBUTION (bottom right) ---
     if FONTS:
